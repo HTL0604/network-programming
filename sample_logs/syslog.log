@@ -1,0 +1,46 @@
+Mar 13 08:00:01 webserver systemd[1]: Started Nginx Web Server.
+Mar 13 08:00:02 webserver kernel: [12345.678] TCP connection established from 192.168.1.10
+Mar 13 08:00:05 webserver sshd[2345]: Accepted publickey for admin from 192.168.1.20 port 52431
+Mar 13 08:00:10 webserver sshd[2350]: Failed password for root from 10.0.0.55 port 43210
+Mar 13 08:00:12 webserver sshd[2351]: Failed password for root from 10.0.0.55 port 43211
+Mar 13 08:00:14 webserver sshd[2352]: Failed password for root from 10.0.0.55 port 43212
+Mar 13 08:00:16 webserver sshd[2353]: Failed password for root from 10.0.0.55 port 43213
+Mar 13 08:00:18 webserver sshd[2354]: Failed password for root from 10.0.0.55 port 43214
+Mar 13 08:00:20 webserver sshd[2355]: Failed password for invalid user admin from 10.0.0.55 port 43215
+Mar 13 08:00:22 webserver sshd[2356]: Failed password for invalid user test from 10.0.0.55 port 43216
+Mar 13 08:00:24 webserver sshd[2357]: Failed password for invalid user guest from 10.0.0.55 port 43217
+Mar 13 08:00:25 webserver sshd[2358]: error: maximum authentication attempts exceeded for root from 10.0.0.55 port 43218
+Mar 13 08:00:30 webserver sshd[2359]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 from 10.0.0.88
+Mar 13 08:00:32 webserver sshd[2360]: Failed password for root from 10.0.0.88 port 55100
+Mar 13 08:00:34 webserver sshd[2361]: Failed password for root from 10.0.0.88 port 55101
+Mar 13 08:00:36 webserver sshd[2362]: Failed password for root from 10.0.0.88 port 55102
+Mar 13 08:01:00 webserver kernel: [12400.000] Out of memory: Kill process 5678 (java) score 950 or sacrifice child
+Mar 13 08:01:01 webserver kernel: [12400.001] Killed process 5678 (java) total-vm:8192000kB
+Mar 13 08:01:05 webserver systemd[1]: mysql.service: Main process exited, code=killed, status=9/KILL
+Mar 13 08:01:06 webserver systemd[1]: mysql.service: Failed with result 'signal'.
+Mar 13 08:01:10 webserver systemd[1]: mysql.service: Scheduled restart job, restart counter is at 3.
+Mar 13 08:01:15 webserver systemd[1]: Started MySQL Community Server.
+Mar 13 08:02:00 webserver cron[3456]: (root) CMD (/usr/local/bin/backup.sh)
+Mar 13 08:02:05 webserver backup[3457]: Database backup started
+Mar 13 08:02:30 webserver backup[3457]: Database backup completed successfully (2.4GB)
+Mar 13 08:03:00 webserver sshd[2370]: Accepted password for deploy from 192.168.1.15 port 60100
+Mar 13 08:03:05 webserver sudo: deploy : TTY=pts/1 ; PWD=/home/deploy ; USER=root ; COMMAND=/usr/bin/systemctl restart nginx
+Mar 13 08:03:10 webserver systemd[1]: Stopping Nginx Web Server...
+Mar 13 08:03:11 webserver systemd[1]: Stopped Nginx Web Server.
+Mar 13 08:03:12 webserver systemd[1]: Starting Nginx Web Server...
+Mar 13 08:03:13 webserver systemd[1]: Started Nginx Web Server.
+Mar 13 08:04:00 webserver sshd[2380]: Invalid user postgres from 10.0.0.99 port 44500
+Mar 13 08:04:02 webserver sshd[2381]: Failed password for invalid user postgres from 10.0.0.99 port 44501
+Mar 13 08:04:04 webserver sshd[2382]: Failed password for invalid user mysql from 10.0.0.99 port 44502
+Mar 13 08:04:06 webserver sshd[2383]: Failed password for invalid user oracle from 10.0.0.99 port 44503
+Mar 13 08:04:08 webserver sshd[2384]: Connection closed by 10.0.0.99 port 44504 [preauth]
+Mar 13 08:05:00 webserver kernel: [12600.000] possible SYN flooding on port 80. Sending cookies.
+Mar 13 08:05:01 webserver kernel: [12600.100] TCP: request_sock_TCP: Possible SYN flooding on port 443.
+Mar 13 08:05:05 webserver ufw[4567]: [UFW BLOCK] IN=eth0 OUT= SRC=10.0.0.55 DST=192.168.1.100 PROTO=TCP DPT=22
+Mar 13 08:05:10 webserver ufw[4568]: [UFW BLOCK] IN=eth0 OUT= SRC=10.0.0.88 DST=192.168.1.100 PROTO=TCP DPT=3306
+Mar 13 08:06:00 webserver kernel: [12700.000] CPU0: Core temperature above threshold, cpu clock throttled
+Mar 13 08:06:05 webserver kernel: [12700.500] EXT4-fs error (device sda1): ext4_lookup:1590: inode #262145: comm nginx: deleted inode referenced
+Mar 13 08:06:10 webserver smartd[5000]: Device: /dev/sda, SMART Health Status: PASSED
+Mar 13 08:07:00 webserver CRON[5100]: (root) CMD (/usr/bin/certbot renew --quiet)
+Mar 13 08:07:05 webserver certbot[5101]: Certificate not yet due for renewal
+Mar 13 08:07:10 webserver sshd[2390]: Received disconnect from 192.168.1.20 port 52431: disconnected by user
