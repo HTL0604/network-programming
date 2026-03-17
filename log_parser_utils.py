@@ -42,12 +42,12 @@ class NormalizedLogEntry:
 NGINX_PATTERN = re.compile(
     r'^(\S+)\s+-\s+(\S+)\s+\[([^\]]+)\]\s+'
     r'"(\w+)\s+(\S+)\s+\S+"\s+(\d{3})\s+(\d+)'
-    r'(?:\s+"([^"]*)"\s+"([^"]*)")?'
+    r'\s+"([^"]*)"\s+"([^"]*)"$'
 )
 
 APACHE_PATTERN = re.compile(
     r'^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+'
-    r'"(\w+)\s+(\S+)\s+\S+"\s+(\d{3})\s+(\d+|-)'
+    r'"(\w+)\s+(\S+)\s+\S+"\s+(\d{3})\s+(\d+|-)$'
 )
 
 SYSLOG_PATTERN = re.compile(

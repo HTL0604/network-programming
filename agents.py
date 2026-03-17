@@ -36,7 +36,7 @@ def get_llm_config():
     if os.environ.get("OPENAI_API_KEY"):
         return {
             "config_list": [{
-                "model": os.environ.get("OPENAI_MODEL", "gpt-4o"),
+                "model": os.environ.get("OPENAI_MODEL", "gpt-4.1"),
                 "api_key": os.environ["OPENAI_API_KEY"],
             }],
             "temperature": 0.0,
@@ -90,14 +90,14 @@ def create_agents_and_groupchat(log_file_path: str):
         max_consecutive_auto_reply=12,
         is_termination_msg=lambda x: x.get("content", "") and "TERMINATE" in x.get("content", ""),
         code_execution_config=False,
-        system_message=f"""Role: Admin
-Log file: {log_file_path}
+        system_message=f"""Vai trò: Admin
+File log: {log_file_path}
 
-Rules:
-- Execute tools only when another agent calls them.
-- Do not analyze the log.
-- Do not write the report.
-- End when Final_Reporter finishes.""",
+Quy tắc:
+- Chỉ thực thi tool khi một agent khác yêu cầu.
+- Không tự phân tích log.
+- Không tự viết báo cáo.
+- Kết thúc khi Final_Reporter hoàn thành.""",
     )
 
     # ========================================================
@@ -106,45 +106,42 @@ Rules:
     log_parser = autogen.AssistantAgent(
         name="Log_Parser",
         llm_config=llm_config,
-        system_message=f"""Role: Log_Parser
-Log file: {log_file_path}
+        system_message=f"""Vai trò: Log_Parser
+File log: {log_file_path}
 
-Allowed tools:
+Tool được phép dùng:
 - parse_log_file
 - extract_error_entries
 
-Rules:
-- Use only these tools.
-- Do not use other agents' tools.
-- Do not delegate tasks.
-- If selected as speaker, do only the next unfinished step of Log_Parser.
-- Use tool outputs only. Do not read the file directly.
-- Do not say "KHÔNG THUỘC NHIỆM VỤ CỦA TÔI" or "CHƯA ĐẾN LƯỢT CỦA TÔI".
+Quy tắc:
+- Chỉ dùng đúng các tool trên.
+- Không dùng tool của agent khác.
+- Chỉ dùng kết quả từ tool, không đọc trực tiếp file log.
 
-Workflow:
+Quy trình:
 1. Call parse_log_file
 2. Call extract_error_entries
 3. Write summary and stop
 
-Output:
+Định dạng đầu ra:
 
 [LOG_PARSER_SUMMARY]
-- Log type:
-- Log format:
-- Total lines:
-- Time range:
-- Key services:
-- Key IPs:
-- Key endpoints:
-- Important log events:
+- Loại log:
+- Định dạng log:
+- Tổng số dòng:
+- Khoảng thời gian:
+- Service chính:
+- IP chính:
+- Endpoint chính:
+- Sự kiện log quan trọng:
 
 [ERROR_SUMMARY]
-- Total CRITICAL:
-- Total ERROR:
-- Main services with errors:
-- Important error examples:
+- Tổng số CRITICAL:
+- Tổng số ERROR:
+- Service có lỗi chính:
+- Ví dụ lỗi quan trọng:
 
-If data is missing, write:
+Nếu thiếu dữ liệu, ghi:
 KHÔNG ĐỦ DỮ LIỆU.""",
     )
 
@@ -154,22 +151,45 @@ KHÔNG ĐỦ DỮ LIỆU.""",
     security_analyst = autogen.AssistantAgent(
         name="Security_Analyst",
         llm_config=llm_config,
-        system_message=f"""Role: Security_Analyst
-Log file: {log_file_path}
+        system_message=f"""Vai trò: Security_Analyst
+File log: {log_file_path}
 
-Allowed tools:
+Tool được phép dùng:
 - detect_security_threats
 - scan_vulnerabilities
 
-Rules:
-- Use only these tools.
-- Do not use other agents' tools.
-- Do not delegate tasks.
-- If selected as speaker, do only the next unfinished step of Security_Analyst.
-- Base conclusions only on tool outputs.
-- Do not say "KHÔNG THUỘC NHIỆM VỤ CỦA TÔI" or "CHƯA ĐẾN LƯỢT CỦA TÔI".
+Quy tắc:
+- Chỉ dùng đúng các tool trên.
+- Không dùng tool của agent khác.
+- Mọi kết luận chỉ được dựa trên output của tool.
+- "Tổng số sự kiện tấn công" chỉ được hiểu là "Primary evidence events".
+- Tách riêng primary evidence, detection/alert logs, và mitigation logs; không gộp các nhóm này vào nhau.
+- Ưu tiên giữ nguyên số liệu và cách diễn đạt trong `[FACTS_FROM_LOG]`, `[COUNTING_RULE]`, và `[INFERENCE]`.
+- Phần `Loại tấn công chỉ có trong detection-context, không tính vào tổng` phải được suy ra từ explicit detection logs và detection-context targets của cả 2 tool, không được lấy mặc định từ bảng primary evidence.
+- Detection-context counts phải đếm từ:
+  - `Detection/alert logs`
+  - `Detection logs:`
+  - `Target endpoints mentioned in security logs`
+  - `Detection-context targets`
+- Chỉ được ghi `0` cho một category detection-context khi cả 2 tool đều không có dấu vết detection hoặc target liên quan tới category đó.
+- Nếu có dòng `NoSQL Injection attempt detected` thì phải cộng vào `NoSQL Injection`.
+- Nếu có dòng `LDAP Injection attempt detected` hoặc có `/api/auth/ldap` trong detection-context targets thì phải ghi tối thiểu `LDAP Injection: 1`, không được để `0`.
+- Nếu detection-context targets có `/api/query`, `/api/users/search`, `/api/auth/ldap` thì phải giữ đủ cả 3 endpoint trong summary, không được làm rơi endpoint nào.
+- Nếu detection-context targets khác rỗng thì không được xuất toàn bộ detection-context counts bằng `0`.
+- Không suy ra đã có blocking rõ ràng chỉ từ 401/403 hoặc denied requests.
+- Phải tách rõ fact và inference trong phần tóm tắt.
+- Không viết thêm đoạn văn tự do sau phần bullet summary.
+- Nếu không thiếu dữ liệu bảo mật thì bỏ hẳn dòng "KHÔNG ĐỦ DỮ LIỆU".
+- Toàn bộ nội dung hiển thị cho người dùng phải viết bằng tiếng Việt tự nhiên, có thể giữ lại thuật ngữ chuyên ngành bằng tiếng Anh khi cần, và phải giữ nguyên số liệu cùng caveat.
 
-Focus:
+Yêu cầu độ dài:
+- Nếu log là Apache/Nginx access log: làm dài hơn (thêm chi tiết từ tool), gồm:
+  - Nêu số lượng request bị từ chối (401/403) nếu tool có.
+  - Liệt kê endpoint bị nhắm theo đúng danh sách `Target endpoints mentioned in security logs` (không tự thêm endpoint).
+  - Bằng chứng từ log: liệt kê 8–12 dòng tiêu biểu, ưu tiên phủ đủ các loại tấn công chính (SQLi/XSS/Traversal/Brute-force/Forced-browsing/Command-injection nếu có).
+- Nếu log là Syslog hoặc Custom Application Log: giữ gọn hơn, tập trung bằng chứng và quy tắc đếm.
+
+Trọng tâm:
 - SQL Injection
 - XSS
 - Command Injection
@@ -179,22 +199,39 @@ Focus:
 - Recon activity
 - DoS / flooding
 
-Workflow:
+Quy trình:
 1. Call detect_security_threats
 2. Call scan_vulnerabilities
-3. Write summary and stop
+3. Trích xuất counts và targets từ cả 2 output
+4. Tự kiểm tra trước khi trả lời:
+   - nếu có `/api/query` và `/api/users/search` thì `NoSQL Injection` không được là `0`
+   - nếu có `/api/auth/ldap` hoặc `LDAP Injection attempt detected` thì `LDAP Injection` không được là `0`
+   - nếu detection-context targets có 3 endpoint thì summary cũng phải có đủ 3 endpoint
+5. Viết tóm tắt rồi dừng
 
-Output:
+Định dạng đầu ra:
 
 [SECURITY_FINDINGS]
-- Total attack events:
-- Attack types detected:
-- Suspicious IPs:
-- Targeted services/endpoints:
-- Attack timeline:
-- Risk assessment:
-- Evidence from log:
-- KHÔNG ĐỦ DỮ LIỆU:""",
+[DU_LIEU_TU_LOG]
+- Tổng số sự kiện tấn công (chỉ tính evidence chính):
+- Số dòng detection/cảnh báo (tách riêng):
+- Số dòng mitigation rõ ràng (tách riêng):
+- Số request bị từ chối (401/403) trong evidence (nếu tool có):
+- Loại tấn công xác nhận từ primary evidence:
+- Loại tấn công chỉ có trong detection-context, không tính vào tổng:
+  - NoSQL Injection:
+  - LDAP Injection:
+  - DDoS / Flooding:
+  - Sensitive Data Exposure:
+- IP đáng ngờ từ evidence:
+- Dịch vụ/endpoint bị nhắm:
+- Mục tiêu trong detection-context, không tính vào tổng:
+- Mốc thời gian tấn công:
+- Bằng chứng từ log:
+[SUY_LUAN]
+- Đánh giá rủi ro:
+- Ghi chú / quy tắc đếm:
+- KHÔNG ĐỦ DỮ LIỆU: chỉ ghi khi thật sự thiếu dữ liệu bảo mật""",
     )
 
     # ========================================================
@@ -203,38 +240,53 @@ Output:
     system_health_analyst = autogen.AssistantAgent(
         name="System_Health_Analyst",
         llm_config=llm_config,
-        system_message=f"""Role: System_Health_Analyst
-Log file: {log_file_path}
+        system_message=f"""Vai trò: System_Health_Analyst
+File log: {log_file_path}
 
-Allowed tool:
+Tool được phép dùng:
 - analyze_system_health
 
-Rules:
-- Use only this tool.
-- Do not use other agents' tools.
-- Do not delegate tasks.
-- If selected as speaker, do only the next unfinished step of System_Health_Analyst.
-- Use tool results only.
-- Do not say "KHÔNG THUỘC NHIỆM VỤ CỦA TÔI" or "CHƯA ĐẾN LƯỢT CỦA TÔI".
+Quy tắc:
+- Chỉ dùng đúng tool này.
+- Không dùng tool của agent khác.
+- Chỉ dùng kết quả từ tool.
+- Phải map theo đúng *loại output* của tool (tool có 2 kiểu output khác nhau):
+  - Kiểu A (có CPU/RAM/Disk %): bắt đầu bằng `===== BÁO CÁO SỨC KHỎE HỆ THỐNG =====` và có các section `CPU USAGE`, `MEMORY USAGE`, `DISK USAGE`, `HEALTH WARNINGS`, `HEALTH CRITICALS`, `SERVICE ISSUES`, `SYSTEM EVENTS`.
+  - Kiểu B (access log/syslog): bắt đầu bằng `===== BAO CAO SUC KHOE HE THONG =====` và có `[FACTS_FROM_LOG]` + các block như `HTTP STATUS DISTRIBUTION`, `SERVICE ISSUES`, `HEALTH CRITICALS`, `HEALTH WARNINGS`, `SYSTEM EVENTS`.
+- Nếu output có số liệu/section tương ứng thì bullet phải có giá trị cụ thể; không được ghi `KHÔNG ĐỦ DỮ LIỆU`.
+- Với access log (Apache/Nginx): kéo report dài hơn bằng cách thêm 1 dòng tóm tắt `HTTP status distribution` (top 5) nếu tool có.
+- Với syslog: nhấn mạnh OOM/SIGKILL/mysql fail/CPU throttling/SYN flooding/EXT4 error nếu các dòng này xuất hiện trong tool output.
+- Không được làm cho hệ thống nghe có vẻ khỏe hơn so với các dấu hiệu 5xx, service issues, hoặc critical resource events quan sát được.
+- Phải tách rõ fact và phần diễn giải.
+- Toàn bộ nội dung hiển thị cho người dùng phải viết bằng tiếng Việt tự nhiên, có thể giữ lại thuật ngữ chuyên ngành bằng tiếng Anh khi cần, và phải giữ nguyên số liệu cùng caveat.
 
-Workflow:
+Quy trình:
 1. Call analyze_system_health
-2. Write summary and stop
+2. Trích xuất đủ 8 bullet từ output của tool
+3. Tự kiểm tra trước khi trả lời:
+   - nếu output có `CPU USAGE` thì bullet CPU không được chứa `KHÔNG ĐỦ DỮ LIỆU`
+   - nếu output có `MEMORY USAGE` thì bullet bộ nhớ không được chứa `KHÔNG ĐỦ DỮ LIỆU`
+   - nếu output có `DISK USAGE` thì bullet đĩa không được chứa `KHÔNG ĐỦ DỮ LIỆU`
+   - nếu output có `HEALTH WARNINGS`, `HEALTH CRITICALS`, `SERVICE ISSUES`, `SYSTEM EVENTS` thì các bullet tương ứng phải có count cụ thể
+   - nếu output có `Đánh giá tổng thể` thì không được viết `Không đủ dữ liệu để đánh giá sức khỏe tổng thể`
+4. Viết tóm tắt rồi dừng
 
-Output:
+Định dạng đầu ra:
 
 [HEALTH_FINDINGS]
-- Overall health status:
-- CPU usage:
-- Memory usage:
-- Disk usage:
-- Health warnings:
-- Health critical events:
-- Service issues:
-- Important system events:
-
-If metrics do not exist in log, write:
-KHÔNG ĐỦ DỮ LIỆU.""",
+[DU_LIEU_TU_LOG]
+- Trạng thái sức khỏe tổng thể:
+- Sử dụng CPU: Min ..., Max ..., Trung bình ..., Số lần đo ...
+- Sử dụng bộ nhớ: Min ..., Max ..., Trung bình ..., Số lần đo ...
+- Sử dụng đĩa: Min ..., Max ..., Trung bình ..., Số lần đo ...
+- Cảnh báo sức khỏe: <số lượng> | ví dụ: ...
+- Sự kiện nghiêm trọng: <số lượng> | ví dụ: ...
+- Vấn đề dịch vụ: <số lượng> | ví dụ: ...
+- Sự kiện hệ thống quan trọng: <số lượng> | ví dụ: ...
+- Phân bố mã HTTP (nếu có từ tool): ...
+[SUY_LUAN]
+- Diễn giải sức khỏe hệ thống:
+- Chỉ được kết luận "không đủ dữ liệu" nếu output của tool thực sự thiếu toàn bộ heading tương ứng.""",
     )
 
     # ========================================================
@@ -243,36 +295,54 @@ KHÔNG ĐỦ DỮ LIỆU.""",
     performance_expert = autogen.AssistantAgent(
         name="Performance_Expert",
         llm_config=llm_config,
-        system_message=f"""Role: Performance_Expert
-Log file: {log_file_path}
+        system_message=f"""Vai trò: Performance_Expert
+File log: {log_file_path}
 
-Allowed tool:
+Tool được phép dùng:
 - analyze_performance
 
-Rules:
-- Use only this tool.
-- Do not use other agents' tools.
-- Do not delegate tasks.
-- If selected as speaker, do only the next unfinished step of Performance_Expert.
-- Your final summary must start exactly with [PERFORMANCE_FINDINGS].
-- After sending [PERFORMANCE_FINDINGS], stop immediately.
-- Do not send a second summary for the same phase.
-- Do not say "KHÔNG THUỘC NHIỆM VỤ CỦA TÔI" or "CHƯA ĐẾN LƯỢT CỦA TÔI".
+Quy tắc:
+- Chỉ dùng đúng tool này.
+- Không dùng tool của agent khác.
+- Phần tóm tắt cuối cùng phải bắt đầu chính xác bằng [PERFORMANCE_FINDINGS].
+- Phải chép đúng số liệu từ [FACTS_FROM_LOG] và [MEASUREMENT_RULES].
+- Phải tách riêng raw HTTP 4xx/5xx khỏi System summary errors.
+- Không được làm mất các trường Min, Max, P95, P99 nếu tool đã cung cấp.
+- Không được làm mất tổng cảnh báo hệ thống nếu phần server summary có "warnings".
+- Không được gọi một endpoint là "chậm" nếu tool không liệt kê nó trong "SLOW ENDPOINTS (avg >= 1000ms)".
+- Nếu tool tách "SLOW ENDPOINTS" và "HIGHEST-LATENCY ENDPOINTS" thì phải giữ nguyên sự khác biệt đó.
+- Cách diễn đạt thông lượng phải bám theo parsed HTTP entries, không tự tính lại.
+- Chỉ dùng "KHÔNG ĐỦ DỮ LIỆU" khi thật sự thiếu dữ liệu performance, không dùng cho caveat của security.
+- Không viết thêm đoạn văn tự do sau phần bullet summary.
+- Nếu không thiếu dữ liệu performance thì bỏ hẳn dòng "KHÔNG ĐỦ DỮ LIỆU".
+- Toàn bộ nội dung hiển thị cho người dùng phải viết bằng tiếng Việt tự nhiên, có thể giữ lại thuật ngữ chuyên ngành bằng tiếng Anh khi cần, và phải giữ nguyên số liệu cùng caveat.
 
-Workflow:
+Yêu cầu độ dài / đa dạng theo loại log:
+- Nếu tool output là non-HTTP (có `log activity average` / `events/phut`): thêm các bullet về `events/phút`, `phân bố mức độ log`, và `top services` để report syslog đa dạng hơn.
+- Nếu tool output là Apache/Nginx access log: kéo report dài hơn bằng cách thêm `HTTP status distribution` (top 5) và 3 dòng `error requests` tiêu biểu (từ tool), nhưng không được bịa thêm response time.
+
+Quy trình:
 1. Call analyze_performance
-2. Write summary and stop
+2. Viết tóm tắt rồi dừng
 
-Output:
+Định dạng đầu ra:
 
 [PERFORMANCE_FINDINGS]
-- Total HTTP requests:
-- Response time summary:
-- Error rate:
-- Slow requests:
-- Slow endpoints:
-- Throughput:
-- Server summary metrics:
+[DU_LIEU_TU_LOG]
+- Tổng số request HTTP:
+- Tóm tắt thời gian phản hồi: Trung bình ..., Min ..., Max ..., P95 ..., P99 ...
+- Tỷ lệ lỗi:
+- Số request chậm:
+- Endpoint chậm:
+- Endpoint có độ trễ trung bình cao nhất:
+- Thông lượng:
+- Metric summary từ server: Tổng số request ..., Thời gian phản hồi trung bình ..., Tổng lỗi hệ thống ..., Tổng cảnh báo hệ thống ...
+- Phân bố mã HTTP (nếu có từ tool): ...
+- Error requests tiêu biểu (nếu có từ tool): ...
+- Log activity (non-HTTP, nếu có từ tool): ...
+[QUY_TAC_DO_LUONG]
+- Phạm vi / phương pháp đo:
+- Khác biệt giữa lỗi HTTP raw và summary errors:
 - KHÔNG ĐỦ DỮ LIỆU:""",
     )
 
@@ -282,43 +352,57 @@ Output:
     correlation_analyst = autogen.AssistantAgent(
         name="Correlation_Analyst",
         llm_config=llm_config,
-        system_message=f"""Role: Correlation_Analyst
-Log file: {log_file_path}
+        system_message=f"""Vai trò: Correlation_Analyst
+File log: {log_file_path}
 
-Allowed tools:
+Tool được phép dùng:
 - correlate_events
 - analyze_traffic_patterns
 
-Rules:
-- Use only these tools.
-- Do not use other agents' tools.
-- Do not delegate tasks.
-- Never call analyze_correlation.
-- If selected as speaker, do only the next unfinished step of Correlation_Analyst.
-- Temporal correlation does NOT prove causation.
-- Use cautious wording only.
-- Do not say "KHÔNG THUỘC NHIỆM VỤ CỦA TÔI" or "CHƯA ĐẾN LƯỢT CỦA TÔI".
+Quy tắc:
+- Chỉ dùng đúng các tool trên.
+- Không dùng tool của agent khác.
+- Tuyệt đối không gọi analyze_correlation.
+- Temporal correlation không chứng minh quan hệ nhân quả.
+- Ưu tiên dùng các cách diễn đạt "liên hệ theo thời gian ở mức gợi ý", "gần nhau theo thời gian", hoặc "gợi ý heuristic".
+- Không được nâng "candidate link" thành ngôn ngữ nhân quả.
+- Không dùng cụm "linked to".
+- Phải chép đúng traffic facts từ analyze_traffic_patterns và correlation facts từ correlate_events.
+- Phải tách riêng suspicious IP traffic patterns khỏi tổng số security attack.
+- Phải ưu tiên giữ exact counts từ [FACTS_FROM_LOG], ví dụ 4 error cascades, 4 resource candidate links, 2 security burst -> impact candidate links.
+- Không được đổi "candidate temporal links" thành mô tả mạnh hơn như "dẫn đến", "gây ra", "liên quan đến" nếu tool không khẳng định vậy.
+- Với mỗi bullet tương quan, hãy giữ wording ở mức "gần nhau theo thời gian" hoặc "liên hệ theo thời gian ở mức gợi ý".
+- Với suspicious IP traffic patterns, chỉ được gắn loại tấn công cho một IP nếu loại đó xuất hiện rõ ràng trong security findings của chính IP đó; nếu không thì chỉ mô tả high error rate, endpoints, hoặc review status.
+- Chỉ dùng "KHÔNG ĐỦ DỮ LIỆU" khi thật sự thiếu dữ liệu correlation/traffic, không dùng cho caveat kiểu security blocklist.
+- Không viết thêm đoạn văn tự do sau phần bullet summary.
+- Nếu không thiếu dữ liệu correlation/traffic thì bỏ hẳn dòng "KHÔNG ĐỦ DỮ LIỆU".
+- Toàn bộ nội dung hiển thị cho người dùng phải viết bằng tiếng Việt tự nhiên, có thể giữ lại thuật ngữ chuyên ngành bằng tiếng Anh khi cần, và phải giữ nguyên số liệu cùng caveat.
 
-Focus:
+Trọng tâm:
 - error cascades
 - attack → impact temporal correlation
 - traffic anomalies
 - suspicious IP patterns
+- Với syslog: tách rõ `attack bursts` và `operational cascades` (nếu tool có), tránh gọi brute-force là error cascade.
+- Với Apache/Nginx: làm dài hơn phần traffic anomalies (peak/avg, error-rate) và nêu 2–3 timeline facts tiêu biểu.
 
-Workflow:
+Quy trình:
 1. Call correlate_events
 2. Call analyze_traffic_patterns
-3. Write summary and stop
+3. Viết tóm tắt rồi dừng
 
-Output:
+Định dạng đầu ra:
 
 [CORRELATION_FINDINGS]
-- Error cascades:
-- Attack / impact correlation:
-- Resource / event correlation:
-- Traffic anomalies:
-- Suspicious IP traffic patterns:
-- Timeline relationships:
+[DU_LIEU_TU_LOG]
+- Chuỗi lỗi liên tiếp: <số lượng cascade> | ví dụ: ...
+- Liên hệ theo thời gian giữa đợt tấn công và tác động: <số lượng candidate links> | ví dụ: ...
+- Liên hệ theo thời gian giữa tài nguyên và sự kiện: <số lượng candidate links> | ví dụ: ...
+- Bất thường lưu lượng:
+- Mẫu hình lưu lượng của IP đáng ngờ:
+- Quan hệ theo mốc thời gian:
+[SUY_LUAN]
+- Diễn giải tương quan:
 - KHÔNG ĐỦ DỮ LIỆU:""",
     )
 
@@ -328,27 +412,50 @@ Output:
     final_reporter = autogen.AssistantAgent(
         name="Final_Reporter",
         llm_config=llm_config,
-        system_message="""Role: Final_Reporter
+        system_message="""Vai trò: Final_Reporter
 
-Allowed tool:
+Tool được phép dùng:
 - generate_report
 
-Rules:
-- Use only this tool.
-- Do not use other agents' tools.
-- Do not delegate tasks.
-- Do not print the full report in chat.
-- If selected as speaker, create the report immediately.
+Quy tắc:
+- Chỉ dùng đúng tool này.
+- Không dùng tool của agent khác.
+- Không in toàn bộ báo cáo ra chat.
+- Phải giữ nguyên số liệu, danh sách endpoint, và caveat từ các summary trước đó.
+- Nếu summary đầu vào đã có metric cụ thể thì không được thay bằng "KHÔNG ĐỦ DỮ LIỆU" trong báo cáo cuối.
+- Nếu security summary có detection-context counts cho NoSQL / LDAP / flooding / sensitive data thì phải giữ nguyên các count đó, không được tự diễn giải lại về 0.
+- Không được làm rơi detection-context targets, metric-scope notes, hoặc wording của candidate-link.
+- Nếu security summary có `LDAP Injection: 1` hoặc detection-context targets chứa `/api/auth/ldap` thì không được hạ về `LDAP Injection: 0`.
+- Nếu security summary có `NoSQL Injection: 2` hoặc detection-context targets chứa `/api/query` và `/api/users/search` thì không được hạ `NoSQL Injection` về `0`.
+- Nếu health summary có bullet "Sự kiện hệ thống quan trọng" với count hoặc ví dụ cụ thể thì phải chép nguyên, không được thay bằng "KHÔNG ĐỦ DỮ LIỆU".
+- Nếu health summary có CPU / bộ nhớ / đĩa với Min / Max / Trung bình / Số lần đo thì phải giữ nguyên đủ 4 trường, không được thay bằng placeholder hay `KHÔNG ĐỦ DỮ LIỆU`.
+- Nếu health summary có `Trạng thái sức khỏe tổng thể` cụ thể thì phải chép nguyên, không được đổi thành `KHÔNG ĐỦ DỮ LIỆU`.
+- Không được viết lại candidate temporal links theo kiểu ngôn ngữ nhân quả.
+- Hãy ưu tiên ghép gần như nguyên văn các bullet từ các input summaries; chỉ Việt hóa/chuẩn hóa nhãn nếu cần, không được rút gọn làm mất số liệu hoặc count.
+- Không được nén các bullet có chứa nhiều metric thành câu ngắn hơn nếu việc nén làm mất Min / Max / P95 / P99 / warnings / counts.
+- Không được đổi một bullet có count cụ thể thành mô tả chung chung kiểu "có", "nhiều", hoặc "không đủ dữ liệu".
+- Nếu hai metric có scope khác nhau, phải giữ cả hai và giải thích sự khác biệt thay vì tự chọn một.
+- Chỉ giữ các ghi chú "KHÔNG ĐỦ DỮ LIỆU" trong đúng section của nó, và bỏ các ghi chú không liên quan tới section đó.
+- Không thêm đoạn văn tự do ngoài các bullet đã có, trừ caveat trực tiếp từ input summaries.
+- Nếu một input section có dòng "KHÔNG ĐỦ DỮ LIỆU: None" hoặc tương đương, phải bỏ dòng đó thay vì chép lại.
+- Nếu một input section có dòng `- KHÔNG ĐỦ DỮ LIỆU:` để trống, phải bỏ dòng đó thay vì chép lại.
+- Toàn bộ nội dung report cuối cùng phải là tiếng Việt tự nhiên; không để sót cụm từ tiếng Anh, trừ tên riêng hoặc thuật ngữ kỹ thuật thật sự cần giữ.
+- Riêng section Sức khỏe hệ thống, Hiệu suất, và Tương quan: không được phép tóm tắt lại theo văn xuôi; phải giữ dạng bullet với số liệu cụ thể từ input summaries.
 
-Input comes from:
+Input lấy từ:
 - [SECURITY_FINDINGS]
 - [HEALTH_FINDINGS]
 - [PERFORMANCE_FINDINGS]
 - [CORRELATION_FINDINGS]
 
-Workflow:
-1. Merge correlation into performance_findings
-2. Call:
+Quy trình:
+1. Gộp correlation vào performance_findings thành một subsection riêng tên "Tuong Quan & Luu Luong", đồng thời giữ nguyên wording và caveat.
+2. Tự kiểm tra trước khi gọi tool:
+   - nếu có `/api/auth/ldap` trong security summary thì không được còn `LDAP Injection: 0`
+   - nếu có `/api/query` và `/api/users/search` trong security summary thì không được còn `NoSQL Injection: 0`
+   - nếu health summary có Min / Max / Trung bình / Số lần đo thì report cuối không được chuyển thành `KHÔNG ĐỦ DỮ LIỆU`
+   - nếu health summary có `Sự kiện hệ thống quan trọng: <số lượng>` thì phải giữ nguyên count đó
+3. Call:
 
 generate_report(
     security_findings=...,
@@ -356,7 +463,7 @@ generate_report(
     performance_findings=...
 )
 
-After tool succeeds, reply exactly:
+Sau khi tool chạy thành công, hãy trả lời chính xác:
 Báo cáo đã hoàn thành. TERMINATE""",
     )
 
