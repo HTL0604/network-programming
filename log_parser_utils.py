@@ -12,7 +12,7 @@ Chuẩn hóa tất cả về cùng một cấu trúc NormalizedLogEntry.
 import re
 import os
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Callable, List, Optional, Tuple
 from datetime import datetime
 from collections import Counter
 
@@ -101,7 +101,7 @@ def detect_log_format(file_path: str) -> str:
             scores['syslog'] += 1
     
     # Format có score cao nhất
-    best_format = max(scores, key=scores.get)
+    best_format = max(scores, key=lambda k: scores[k])
     if scores[best_format] == 0:
         return 'unknown'
     
@@ -228,11 +228,19 @@ def _parse_syslog_line(line: str) -> Optional[NormalizedLogEntry]:
     # Xác định log level dựa trên nội dung
     level = 'INFO'
     msg_lower = message.lower()
-    if any(kw in msg_lower for kw in ['error', 'fail', 'fatal', 'critical', 'emergency', 'panic']):
-        level = 'ERROR'
+    # CRITICAL: OOM kill, process bị kill, system panic
+    if any(kw in msg_lower for kw in ['out of memory', 'killed process', 'oom', 'panic', 'emergency']):
+        level = 'CRITICAL'
     elif any(kw in msg_lower for kw in ['crit', 'alert']):
         level = 'CRITICAL'
-    elif any(kw in msg_lower for kw in ['warn', 'invalid', 'denied', 'refused', 'timeout', 'blocked']):
+    # ERROR: fail, error, fatal, code=killed
+    elif any(kw in msg_lower for kw in ['error', 'fail', 'fatal', 'critical', 'code=killed']):
+        level = 'ERROR'
+    # WARNING: warn, invalid, denied, blocked, throttl, syn flood
+    elif any(kw in msg_lower for kw in [
+        'warn', 'invalid', 'denied', 'refused', 'timeout', 'blocked',
+        'throttl', 'syn flood', 'flooding',
+    ]):
         level = 'WARNING'
     elif any(kw in msg_lower for kw in ['debug']):
         level = 'DEBUG'
@@ -299,7 +307,7 @@ def _parse_custom_line(line: str) -> Optional[NormalizedLogEntry]:
 # MAIN PARSER
 # ============================================================
 
-def parse_log_to_entries(file_path: str) -> tuple:
+def parse_log_to_entries(file_path: str) -> Tuple[List[NormalizedLogEntry], str]:
     """Parse file log thành danh sách NormalizedLogEntry.
     Tự động nhận diện format.
     
@@ -311,17 +319,15 @@ def parse_log_to_entries(file_path: str) -> tuple:
     
     log_format = detect_log_format(file_path)
     
-    parser_map = {
+    parser_map: dict[str, Callable[[str], Optional[NormalizedLogEntry]]] = {
         'nginx': _parse_nginx_line,
         'apache': _parse_apache_line,
         'syslog': _parse_syslog_line,
         'custom': _parse_custom_line,
     }
     
-    parser = parser_map.get(log_format)
-    if not parser:
-        # Fallback: thử tất cả parsers
-        parser = _try_all_parsers
+    parser: Callable[[str], Optional[NormalizedLogEntry]] = parser_map.get(log_format, _try_all_parsers)
+    if log_format not in parser_map:
         log_format = 'auto'
     
     entries = []
