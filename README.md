@@ -11,9 +11,6 @@ Admin (UserProxyAgent)
   ▼
 GroupChatManager ──────────────────────────────────────────┐
   │                                                        │
-  ├── Log_Manager (Orchestrator)                           │
-  │     Điều phối quy trình phân tích                      │
-  │                                                        │
   ├── Log_Parser (Coder)                                   │
   │     Tools: parse_log_file, extract_error_entries        │
   │                                                        │
@@ -85,7 +82,7 @@ python main.py sample_logs/syslog.log          # Syslog format
 | File | Mô tả |
 |------|--------|
 | `main.py` | Entry point - khởi chạy hệ thống multi-agent |
-| `agents.py` | Định nghĩa 8 agents và thiết lập GroupChat |
+| `agents.py` | Định nghĩa 7 agents và thiết lập GroupChat |
 | `tools.py` | 9 custom tools cho phân tích log |
 | `log_parser_utils.py` | Module phân tích đa định dạng log (unified parser) |
 | `requirements.txt` | Dependencies |

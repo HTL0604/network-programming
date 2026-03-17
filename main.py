@@ -32,7 +32,6 @@ def print_banner():
 ║                                                              ║
 ║  Agents:                                                     ║
 ║    👤 Admin          - Quản trị viên                         ║
-║    📋 Log_Manager    - Điều phối quy trình                   ║
 ║    🔧 Log_Parser     - Phân tích cấu trúc log               ║
 ║    🛡️  Security      - Phân tích bảo mật                     ║
 ║    🏥 Health         - Phân tích sức khỏe hệ thống           ║
