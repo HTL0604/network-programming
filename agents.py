@@ -33,6 +33,19 @@ load_dotenv()
 
 def get_llm_config():
     """Cấu hình LLM dựa trên biến môi trường có sẵn."""
+    if os.environ.get("DEEPSEEK_API_KEY"):
+        return {
+            "config_list": [{
+                "model": os.environ.get("DEEPSEEK_MODEL", "deepseek-chat"),
+                "api_key": os.environ["DEEPSEEK_API_KEY"],
+                "base_url": "https://api.deepseek.com",
+                "price": [0, 0],
+            }],
+            "temperature": 0.0,
+            "timeout": 120,
+            "cache_seed": 42,
+        }
+
     if os.environ.get("OPENAI_API_KEY"):
         return {
             "config_list": [{
@@ -50,19 +63,6 @@ def get_llm_config():
                 "model": os.environ.get("GOOGLE_MODEL", "gemini-2.0-flash"),
                 "api_key": os.environ["GOOGLE_API_KEY"],
                 "api_type": "google",
-            }],
-            "temperature": 0.0,
-            "timeout": 120,
-            "cache_seed": 42,
-        }
-
-    if os.environ.get("DEEPSEEK_API_KEY"):
-        return {
-            "config_list": [{
-                "model": os.environ.get("DEEPSEEK_MODEL", "deepseek-chat"),
-                "api_key": os.environ["DEEPSEEK_API_KEY"],
-                "base_url": "https://api.deepseek.com/v1",
-                "price": [0, 0],
             }],
             "temperature": 0.0,
             "timeout": 120,

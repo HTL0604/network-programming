@@ -72,7 +72,7 @@ def main():
         print(f"⚠️ Không đếm được số dòng log: {e}")
 
     api_found = False
-    for key_name in ["OPENAI_API_KEY", "GOOGLE_API_KEY", "DEEPSEEK_API_KEY"]:
+    for key_name in ["DEEPSEEK_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY"]:
         if os.environ.get(key_name):
             provider = key_name.replace("_API_KEY", "").replace("_", " ")
             print(f"🔑 API Provider: {provider}")
